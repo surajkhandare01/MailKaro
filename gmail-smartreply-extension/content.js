@@ -2,18 +2,58 @@ console.log("🚀 [MailKaro] Content Script Active in Gmail!");
 
 const BACKEND_BASE_URL = "https://mailkaro.onrender.com";
 
-// Extract latest incoming email text
+// Extract latest incoming email text accurately from Gmail thread
 function getIncomingEmailText() {
-  const messageBodies = document.querySelectorAll(".a3s.aiL, .ii.gt, div[dir='ltr']");
-  if (messageBodies.length > 0) {
-    for (let i = messageBodies.length - 1; i >= 0; i--) {
-      const text = messageBodies[i].innerText.trim();
-      if (text && !text.includes("AI Reply") && text.length > 5) {
-        return text;
+  // Gmail message body selectors (excluding the active compose box)
+  const selectors = [
+    ".h7 .a3s.aiL",
+    ".ii.gt .a3s.aiL",
+    ".a3s.aiL",
+    ".adn.ads .gs"
+  ];
+
+  for (const selector of selectors) {
+    const messageBodies = document.querySelectorAll(selector);
+    if (messageBodies.length > 0) {
+      for (let i = messageBodies.length - 1; i >= 0; i--) {
+        const text = messageBodies[i].innerText.trim();
+        // Skip text that includes compose markers or is too brief
+        if (text && text.length > 10 && !text.includes("AI Reply")) {
+          console.log("📩 [MailKaro] Extracted incoming email:", text.substring(0, 100) + "...");
+          return text;
+        }
       }
     }
   }
   return "";
+}
+
+// Safely insert text into Gmail compose box
+function insertTextIntoComposeBox(composeBox, text) {
+  composeBox.focus();
+
+  // Try standard execCommand first
+  const success = document.execCommand("insertText", false, text);
+
+  if (!success) {
+    // Modern Selection & Range fallback
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const textNode = document.createTextNode(text);
+      range.insertNode(textNode);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      // Direct insertion fallback
+      composeBox.innerText = text;
+    }
+  }
+
+  // Trigger input events so Gmail enables the "Send" button
+  composeBox.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 // Inject MailKaro Toolbar into Gmail Compose Area
@@ -31,9 +71,9 @@ function injectMailKaroToolbar(toolbar) {
   const langSelect = document.createElement("select");
   langSelect.className = "mailkaro-lang-select";
   langSelect.innerHTML = `
-    <option value="English">English</option>
+    <option value="English" selected>English</option>
     <option value="Hindi">Hindi</option>
-    <option value="Marathi" selected>Marathi</option>
+    <option value="Marathi">Marathi</option>
   `;
   langSelect.style.cssText = `
     height: 32px;
@@ -92,9 +132,7 @@ function injectMailKaroToolbar(toolbar) {
       return;
     }
 
-    const incomingText = getIncomingEmailText();
-    const selectedLang = langSelect.value;
-
+    // Locate compose box
     const composeBox =
       toolbar.closest("table")?.parentElement?.querySelector('div[role="textbox"][contenteditable="true"]') ||
       document.querySelector('div[role="textbox"][contenteditable="true"]');
@@ -103,6 +141,9 @@ function injectMailKaroToolbar(toolbar) {
       alert("MailKaro: Could not find reply textbox. Please click inside the reply area first.");
       return;
     }
+
+    const incomingText = getIncomingEmailText();
+    const selectedLang = langSelect.value;
 
     isGenerating = true;
     replyBtn.disabled = true;
@@ -117,8 +158,8 @@ function injectMailKaroToolbar(toolbar) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          incomingEmail: incomingText || "Thank you for reaching out.",
-          intent: "accept",
+          incomingEmail: incomingText || "Thank you for reaching out to us. We will get back to you shortly.",
+          intent: "reply",
           tone: "Professional",
           language: selectedLang,
         }),
@@ -134,9 +175,12 @@ function injectMailKaroToolbar(toolbar) {
       }
 
       if (response.ok && (data.replies || data.reply)) {
-        const replyText = data.replies?.detailedReply || data.replies?.quickReply || data.reply;
-        composeBox.focus();
-        document.execCommand("insertText", false, replyText);
+        const replyText =
+          data.replies?.detailedReply ||
+          data.replies?.quickReply ||
+          data.reply;
+
+        insertTextIntoComposeBox(composeBox, replyText);
       } else {
         alert(data.message || "Failed to generate reply.");
       }
