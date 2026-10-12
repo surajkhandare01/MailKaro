@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MailKaro Extension</title>
+  <style>
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #fafafa;
+      color: #111827;
+      box-sizing: border-box;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .brand span {
+      color: #4f46e5;
+    }
+    
+    /* Login Locked Card */
+    #loginCard {
+      display: none;
+      text-align: center;
+      padding: 20px 10px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    #loginCard h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: #111827;
+    }
+    #loginCard p {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0 0 16px;
+      line-height: 1.4;
+    }
+    .btn-login {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn-login:hover {
+      background: #4338ca;
+    }
+
+    /* Main App Card */
+    #appCard {
+      display: none;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin: 10px 0 4px;
+    }
+    textarea, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #ffffff;
+      outline: none;
+    }
+    textarea:focus, select:focus {
+      border-color: #4f46e5;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-generate {
+      width: 100%;
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 14px;
+      transition: background 0.2s;
+    }
+    .btn-generate:hover {
+      background: #4338ca;
+    }
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .output-wrapper {
+      margin-top: 14px;
+      display: none;
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .copy-btn {
+      background: #ffffff;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .output {
+      padding: 10px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .user-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .logout-link {
+      color: #ef4444;
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">Mail<span>Karo</span></div>
+
+  <!-- Locked Screen: Displayed when not logged in -->
+  <div id="loginCard">
+    <h3>Sign in to MailKaro</h3>
+    <p>Please log in to your account to start generating emails in English, Hindi, and Marathi.</p>
+    <button id="openLoginBtn" class="btn-login" type="button">Log In / Register</button>
+  </div>
+
+  <!-- Main Generator Screen: Displayed when logged in -->
+  <div id="appCard">
+    <label for="prompt">Topic / Message</label>
+    <textarea id="prompt" rows="3" placeholder="e.g. Leave application for 2 days..."></textarea>
+
+    <div class="row">
+      <div>
+        <label for="language">Language</label>
+        <select id="language">
+          <option value="English">English</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Marathi">Marathi</option>
+        </select>
+      </div>
+      <div>
+        <label for="tone">Tone</label>
+        <select id="tone">
+          <option value="Professional">Professional</option>
+          <option value="Formal">Formal</option>
+          <option value="Friendly">Friendly</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="generateBtn" class="btn-generate" type="button">Generate Email</button>
+
+    <div id="outputWrapper" class="output-wrapper">
+      <div class="output-header">
+        <span style="font-size: 11px; font-weight: 600; color: #6b7280;">DRAFT</span>
+        <button id="copyBtn" class="copy-btn" type="button">Copy</button>
+      </div>
+      <div id="resultBox" class="output"></div>
+    </div>
+
+    <div class="user-footer">
+      <span>Logged In</span>
+      <span id="logoutBtn" class="logout-link">Log out</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
