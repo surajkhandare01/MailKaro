@@ -17,7 +17,7 @@ function getIncomingEmailText() {
   return "";
 }
 
-// 2. Inject UI controls (Language Selector + Action Button) into the compose toolbar
+// 2. Inject UI controls into the compose toolbar
 function injectMailKaroToolbar(toolbar) {
   if (toolbar.dataset.mailkaroInjected === "true" || toolbar.querySelector(".mailkaro-container")) {
     return;
@@ -88,8 +88,7 @@ function injectMailKaroToolbar(toolbar) {
     const token = storage.token;
 
     if (!token) {
-      alert("MailKaro: You are not logged in! Please sign in to your MailKaro account first.");
-      chrome.runtime.sendMessage({ action: "OPEN_LOGIN_TAB" });
+      alert("MailKaro: You are not logged in! Please sign in through the MailKaro extension popup first.");
       return;
     }
 
@@ -112,6 +111,7 @@ function injectMailKaroToolbar(toolbar) {
     replyBtn.innerHTML = `Drafting in ${selectedLang}...`;
 
     try {
+      // दुरुस्त केलेली सरळ URL (तुमच्या बॅकएंड एंडपॉईंटनुसार):
       const response = await fetch(`${BACKEND_BASE_URL}/api/email/smart-reply`, {
         method: "POST",
         headers: {
@@ -131,12 +131,11 @@ function injectMailKaroToolbar(toolbar) {
       if (response.status === 401) {
         alert("MailKaro: Your session has expired. Please log in again.");
         await chrome.storage.local.remove(["token"]);
-        chrome.runtime.sendMessage({ action: "OPEN_LOGIN_TAB" });
         return;
       }
 
-      if (response.ok && data.replies) {
-        const replyContent = data.replies.detailedReply || data.replies.quickReply;
+      if (response.ok && (data.replies || data.reply)) {
+        const replyContent = data.replies?.detailedReply || data.replies?.quickReply || data.reply;
         composeBox.focus();
         document.execCommand("insertText", false, replyContent);
       } else {
@@ -144,7 +143,7 @@ function injectMailKaroToolbar(toolbar) {
       }
     } catch (err) {
       console.error("[MailKaro Error]:", err);
-      alert("Unable to connect to the MailKaro server. Please ensure the backend service is running and accessible.");
+      alert("Unable to connect to MailKaro server. Please ensure Render backend is awake and running.");
     } finally {
       isGenerating = false;
       replyBtn.disabled = false;
@@ -157,7 +156,7 @@ function injectMailKaroToolbar(toolbar) {
   toolbar.appendChild(container);
 }
 
-// 3. Debounced observer to inject into Gmail toolbars
+// 3. Debounced observer
 let debounceTimer = null;
 const observer = new MutationObserver(() => {
   if (debounceTimer) clearTimeout(debounceTimer);
