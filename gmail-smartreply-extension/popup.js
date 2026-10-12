@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const logoutBtn = document.getElementById("logoutBtn");
 
   // Production URLs
-  const FRONTEND_LOGIN_URL = "https://mailkaro.vercel.app/login"; // तुझी Vercel लॉगिन लिंक
+  const FRONTEND_LOGIN_URL = "https://mailkaro.vercel.app/#/login"; // तुझी Vercel लॉगिन लिंक
   const BACKEND_API_URL = "https://mailkaro.onrender.com"; // Render बॅकएंड लिंक
 
   // Check login state and toggle view
