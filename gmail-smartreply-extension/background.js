@@ -1,18 +1,21 @@
-// Background Service Worker for MailKaro Extension
+// Background Service Worker
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "OPEN_LOGIN_TAB") {
-    // Vercel वर डिप्लॉय केलेल्या फ्रंटएंडची लॉगिन URL
-    const LOGIN_URL = "https://mailkaro.vercel.app/#/login";
-
-    chrome.tabs.create({
-      url: LOGIN_URL,
-      active: true,
+// 1. Listen for messages directly from the Vercel Web App
+chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+  if (request.action === "SET_TOKEN" && request.token) {
+    chrome.storage.local.set({ token: request.token }, () => {
+      console.log("✅ [MailKaro] Token successfully saved from Web App!");
+      sendResponse({ status: "success", message: "Token stored" });
     });
-
-    // खात्रीसाठी रिस्पॉन्स पाठवा
-    sendResponse({ status: "Opening login tab", url: LOGIN_URL });
+    return true; // Keep message channel open for async response
   }
-  
-  return true; // asynchronous response साठी
+});
+
+// 2. Open login page when requested by Content Script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "OPEN_LOGIN_TAB") {
+    chrome.tabs.create({ url: "https://mailkaro.vercel.app/#/login" });
+    sendResponse({ status: "opened" });
+  }
+  return true;
 });

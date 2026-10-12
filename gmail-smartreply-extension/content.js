@@ -1,9 +1,8 @@
 console.log("🚀 [MailKaro] Content Script Active in Gmail!");
 
-// Production Backend Base URL
 const BACKEND_BASE_URL = "https://mailkaro.onrender.com";
 
-// 1. Extract the latest email content from the Gmail thread
+// Extract latest incoming email text
 function getIncomingEmailText() {
   const messageBodies = document.querySelectorAll(".a3s.aiL, .ii.gt, div[dir='ltr']");
   if (messageBodies.length > 0) {
@@ -17,7 +16,7 @@ function getIncomingEmailText() {
   return "";
 }
 
-// 2. Inject UI controls into the compose toolbar
+// Inject MailKaro Toolbar into Gmail Compose Area
 function injectMailKaroToolbar(toolbar) {
   if (toolbar.dataset.mailkaroInjected === "true" || toolbar.querySelector(".mailkaro-container")) {
     return;
@@ -83,35 +82,34 @@ function injectMailKaroToolbar(toolbar) {
 
     if (isGenerating) return;
 
-    // Check auth token from Chrome storage
+    // Check token from Chrome storage
     const storage = await chrome.storage.local.get(["token"]);
     const token = storage.token;
 
     if (!token) {
-      alert("MailKaro: You are not logged in! Please sign in through the MailKaro extension popup first.");
+      alert("MailKaro: Please log in to your account first.");
+      chrome.runtime.sendMessage({ action: "OPEN_LOGIN_TAB" });
       return;
     }
 
     const incomingText = getIncomingEmailText();
     const selectedLang = langSelect.value;
 
-    // Locate Gmail compose textbox
     const composeBox =
       toolbar.closest("table")?.parentElement?.querySelector('div[role="textbox"][contenteditable="true"]') ||
       document.querySelector('div[role="textbox"][contenteditable="true"]');
 
     if (!composeBox) {
-      alert("MailKaro: Could not find the Gmail compose area. Please click inside the reply box first.");
+      alert("MailKaro: Could not find reply textbox. Please click inside the reply area first.");
       return;
     }
 
     isGenerating = true;
     replyBtn.disabled = true;
-    const originalText = replyBtn.innerHTML;
+    const originalContent = replyBtn.innerHTML;
     replyBtn.innerHTML = `Drafting in ${selectedLang}...`;
 
     try {
-      // दुरुस्त केलेली सरळ URL (तुमच्या बॅकएंड एंडपॉईंटनुसार):
       const response = await fetch(`${BACKEND_BASE_URL}/api/email/smart-reply`, {
         method: "POST",
         headers: {
@@ -119,7 +117,7 @@ function injectMailKaroToolbar(toolbar) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          incomingEmail: incomingText || "Thank you for getting in touch.",
+          incomingEmail: incomingText || "Thank you for reaching out.",
           intent: "accept",
           tone: "Professional",
           language: selectedLang,
@@ -129,25 +127,26 @@ function injectMailKaroToolbar(toolbar) {
       const data = await response.json();
 
       if (response.status === 401) {
-        alert("MailKaro: Your session has expired. Please log in again.");
+        alert("MailKaro: Session expired. Please log in again.");
         await chrome.storage.local.remove(["token"]);
+        chrome.runtime.sendMessage({ action: "OPEN_LOGIN_TAB" });
         return;
       }
 
       if (response.ok && (data.replies || data.reply)) {
-        const replyContent = data.replies?.detailedReply || data.replies?.quickReply || data.reply;
+        const replyText = data.replies?.detailedReply || data.replies?.quickReply || data.reply;
         composeBox.focus();
-        document.execCommand("insertText", false, replyContent);
+        document.execCommand("insertText", false, replyText);
       } else {
-        alert(data.message || "Failed to generate reply. Please try again.");
+        alert(data.message || "Failed to generate reply.");
       }
     } catch (err) {
       console.error("[MailKaro Error]:", err);
-      alert("Unable to connect to MailKaro server. Please ensure Render backend is awake and running.");
+      alert("Unable to reach MailKaro backend. Please verify your Render service is active.");
     } finally {
       isGenerating = false;
       replyBtn.disabled = false;
-      replyBtn.innerHTML = originalText;
+      replyBtn.innerHTML = originalContent;
     }
   });
 
@@ -156,13 +155,13 @@ function injectMailKaroToolbar(toolbar) {
   toolbar.appendChild(container);
 }
 
-// 3. Debounced observer
+// Observer for dynamic Gmail toolbars
 let debounceTimer = null;
 const observer = new MutationObserver(() => {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    const toolbars = document.querySelectorAll(".btC, .gU.Up, tr.btC");
-    toolbars.forEach((toolbar) => injectMailKaroToolbar(toolbar));
+    const toolbars = document.querySelectorAll(".btC, .gU.Up, tr.btC, div[role='toolbar']");
+    toolbars.forEach((tb) => injectMailKaroToolbar(tb));
   }, 300);
 });
 

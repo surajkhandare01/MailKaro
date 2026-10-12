@@ -1,31 +1,35 @@
 {
   "manifest_version": 3,
-  "name": "MailKaro - AI Email Writer",
-  "version": "1.0",
-  "description": "AI Email Writer & Smart Reply for Gmail supporting English, Hindi, and Marathi.",
-  "permissions": ["storage"],
+  "name": "MailKaro - AI Email Assistant",
+  "version": "1.0.0",
+  "description": "Generate smart email replies directly inside Gmail powered by Gemini AI",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
   "host_permissions": [
-    "http://localhost:5000/*",
-    "http://localhost:5173/*",
+    "https://mailkaro.onrender.com/*",
     "https://mail.google.com/*"
   ],
+  "externally_connectable": {
+    "matches": [
+      "https://mailkaro.vercel.app/*",
+      "http://localhost:5173/*"
+    ]
+  },
   "background": {
     "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html"
   },
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
       "js": ["content.js"],
-      "run_at": "document_end",
-      "all_frames": true
-    },
-    {
-      "matches": ["http://localhost:5173/*"],
-      "js": ["authSync.js"],
-      "run_at": "document_idle"
+      "run_at": "document_end"
     }
-  ]
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
 }
