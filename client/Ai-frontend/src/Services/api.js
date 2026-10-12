@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: "https://mailkaro.onrender.com",
 });
 
 // Automatically attach JWT token from localStorage to every outgoing request

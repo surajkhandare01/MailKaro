@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const copyBtn = document.getElementById("copyBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
+  // Production URLs
+  const FRONTEND_LOGIN_URL = "https://mailkaro.vercel.app/login"; // तुझी Vercel लॉगिन लिंक
+  const BACKEND_API_URL = "https://mailkaro.onrender.com"; // Render बॅकएंड लिंक
+
   // Check login state and toggle view
   async function checkAuth() {
     const { token } = await chrome.storage.local.get(["token"]);
@@ -27,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Open web login page
   openLoginBtn?.addEventListener("click", () => {
-    chrome.tabs.create({ url: "http://localhost:5173/login" });
+    chrome.tabs.create({ url: FRONTEND_LOGIN_URL });
   });
 
   // Handle logout
@@ -59,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (outputWrapper) outputWrapper.style.display = "none";
 
     try {
-      const response = await fetch("http://localhost:5000/api/email/generate-email", {
+      const response = await fetch(`${BACKEND_API_URL}/api/email/generate-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert(data.message || "Failed to generate email draft. Please try again.");
       }
     } catch {
-      alert("Unable to connect to the backend server. Make sure http://localhost:5000 is active.");
+      alert("Unable to connect to the backend server. Please check your internet connection.");
     } finally {
       generateBtn.disabled = false;
       generateBtn.textContent = "Generate Email";

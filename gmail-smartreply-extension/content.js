@@ -1,5 +1,8 @@
 console.log("🚀 [MailKaro] Content Script Active in Gmail!");
 
+// Production Backend Base URL
+const BACKEND_BASE_URL = "https://mailkaro.onrender.com";
+
 // 1. Extract the latest email content from the Gmail thread
 function getIncomingEmailText() {
   const messageBodies = document.querySelectorAll(".a3s.aiL, .ii.gt, div[dir='ltr']");
@@ -109,7 +112,7 @@ function injectMailKaroToolbar(toolbar) {
     replyBtn.innerHTML = `Drafting in ${selectedLang}...`;
 
     try {
-      const response = await fetch("http://localhost:5000/api/email/smart-reply", {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/email/smart-reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +144,7 @@ function injectMailKaroToolbar(toolbar) {
       }
     } catch (err) {
       console.error("[MailKaro Error]:", err);
-      alert("Unable to connect to the backend server. Make sure http://localhost:5000 is running.");
+      alert("Unable to connect to the MailKaro server. Please ensure the backend service is running and accessible.");
     } finally {
       isGenerating = false;
       replyBtn.disabled = false;
