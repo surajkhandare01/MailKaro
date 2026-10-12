@@ -3,7 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
 // chrome://extensions वरून कॉपी केलेली 32-अक्षरी ID इथे पेस्ट करा
-const EXTENSION_ID = "filcmkfjngmidpakaocpponeececeajl";
+const EXTENSION_ID = "YOUR_ACTUAL_EXTENSION_ID_HERE";
 
 export default function Login() {
   const [formData, setFormData] = useState({
