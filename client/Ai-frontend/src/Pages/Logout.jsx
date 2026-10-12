@@ -9,7 +9,7 @@ function Logout() {
     const logout = () => {
         localStorage.removeItem("token");
         setToken(null);
-        navigate("/login");
+        navigate("/");
     };
 
     return <button onClick={logout}>Logout</button>;
