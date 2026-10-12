@@ -1,8 +1,11 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Sparkles, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import api from "../Services/api";
 import { AuthContext } from "../context/AuthContext";
+
+// chrome://extensions वर दिसणारी तुमची ३२-अक्षरी ID इथे पेस्ट करा
+const EXTENSION_ID = "YOUR_ACTUAL_EXTENSION_ID_HERE";
 
 function Login() {
     const [email, setEmail] = useState("");
@@ -25,8 +28,33 @@ function Login() {
                 password,
             });
 
-            setToken(response.data.token);
-            localStorage.setItem("token", response.data.token);
+            const token = response.data.token;
+
+            // 1. Context आणि Web LocalStorage अपडेट करा
+            setToken(token);
+            localStorage.setItem("token", token);
+            if (response.data.user) {
+                localStorage.setItem("user", JSON.stringify(response.data.user));
+            }
+
+            // 2. Chrome Extension कडे टोकन ऑटो-सिंक करा
+            if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                try {
+                    chrome.runtime.sendMessage(
+                        EXTENSION_ID,
+                        { action: "SET_TOKEN", token: token },
+                        (res) => {
+                            if (chrome.runtime.lastError) {
+                                console.warn("Extension sync notice:", chrome.runtime.lastError.message);
+                            } else {
+                                console.log("Token synced to extension successfully:", res);
+                            }
+                        }
+                    );
+                } catch (extErr) {
+                    console.warn("Could not sync with extension:", extErr);
+                }
+            }
 
             navigate("/dashboard");
         } catch (error) {
@@ -44,8 +72,31 @@ function Login() {
             <div className="w-full max-w-md">
 
                 <div className="mb-8 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100">
-                        <Sparkles size={21} />
+                    {/* MailKaro Brand SVG Logo */}
+                    <div className="mx-auto flex justify-center">
+                        <Link className="inline-block transition hover:opacity-90" to="/">
+                            <svg className="h-14 w-14" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="reg_mBadgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#4F46E5"></stop>
+                                        <stop offset="55%" stopColor="#6366F1"></stop>
+                                        <stop offset="100%" stopColor="#7C3AED"></stop>
+                                    </linearGradient>
+                                    <linearGradient id="reg_mFoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#FFFFFF"></stop>
+                                        <stop offset="100%" stopColor="#E0E7FF"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <rect x="12" y="12" width="96" height="96" rx="28" fill="url(#reg_mBadgeBg)"></rect>
+                                <rect x="13.5" y="13.5" width="93" height="93" rx="26.5" fill="none" stroke="#FFFFFF" strokeOpacity="0.18" strokeWidth="1.5"></rect>
+                                <rect x="25" y="40" width="70" height="48" rx="10" fill="#FFFFFF" fillOpacity="0.15" stroke="#FFFFFF" strokeWidth="4.5" strokeLinejoin="round"></rect>
+                                <path d="M 27 84 L 27 44 L 60 71 L 93 44 L 93 84" fill="none" stroke="url(#reg_mFoldGrad)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"></path>
+                                <path d="M 37 44 L 60 63 L 83 44" fill="none" stroke="#C7D2FE" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"></path>
+                                <path d="M 88 18 C 88 26.5 92.5 31 101 31 C 92.5 31 88 35.5 88 44 C 88 35.5 83.5 31 75 31 C 83.5 31 88 26.5 88 18 Z" fill="#FBBF24"></path>
+                                <circle cx="88" cy="31" r="3" fill="#FFFFFF"></circle>
+                                <circle cx="97" cy="19" r="1.8" fill="#FDE68A"></circle>
+                            </svg>
+                        </Link>
                     </div>
 
                     <h1 className="mt-5 text-2xl font-bold text-gray-900">
@@ -53,7 +104,7 @@ function Login() {
                     </h1>
 
                     <p className="mt-2 text-sm text-gray-500">
-                        Sign in to continue to AI Mailer
+                        Sign in to continue to MailKaro
                     </p>
                 </div>
 
@@ -112,6 +163,7 @@ function Login() {
                     </div>
 
                     <button
+                        type="submit"
                         disabled={loading}
                         className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
