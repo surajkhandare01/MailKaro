@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MailKaro - AI Email Assistant",
+  "name": "MailKaro - AI Email Writer",
   "version": "1.0.0",
-  "description": "Generate smart email replies directly inside Gmail powered by Gemini AI",
+  "description": "AI Email Writer & Smart Reply for Gmail supporting English, Hindi, and Marathi.",
   "permissions": [
     "storage",
     "tabs",
@@ -29,7 +29,6 @@
     }
   ],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_popup": "popup.html"
   }
 }
