@@ -5,7 +5,7 @@ import api from "../Services/api";
 import { AuthContext } from "../context/AuthContext";
 
 // chrome://extensions वर दिसणारी तुमची ३२-अक्षरी ID इथे पेस्ट करा
-const EXTENSION_ID = "YOUR_ACTUAL_EXTENSION_ID_HERE";
+const EXTENSION_ID = "filcmkfjngmidpakaocpponeececeajl";
 
 function Login() {
     const [email, setEmail] = useState("");
