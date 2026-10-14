@@ -25,6 +25,7 @@ function Home() {
                 <Sparkles size={15} />
                 <span>AI-powered email writing</span>
               </div>
+              
               <span className="text-[12px] font-medium tracking-wide text-gray-500">
                 Powered by{" "}
                 <span className="font-semibold text-indigo-600 hover:text-indigo-700 transition">
