@@ -39,7 +39,7 @@ function Footer() {
     },
     {
       name: "Instagram",
-      url: "https://instagram.com",
+      url: "https://instagram.com/global_it_hub?rpxt=ZjUxOXExZjhrdHc1",
       hoverStyle:
         "hover:-translate-y-1 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600 hover:shadow-md",
       icon: (
